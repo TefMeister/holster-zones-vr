@@ -20,6 +20,7 @@ class HolstersUi : Form {
     static readonly Color Warn = Color.FromArgb(230, 190, 90), ButtonBack = Color.FromArgb(62, 67, 86);
 
     // the spots, top to bottom: key (the game's name), title, what the hand does there, and whether its size can be set here
+    // ("size", or "size:<mm>" when the spot's own size is not OWN_SIZE_MM)
     static readonly string[][] SPOTS = {
         new[] { "right-shoulder", "RIGHT SHOULDER", "quick slot UP: RG takes that gun out, or puts it away", "size" },
         new[] { "right-hip", "RIGHT HIP", "quick slot RIGHT: RG takes that gun out, or puts it away", "size" },
@@ -27,7 +28,7 @@ class HolstersUi : Form {
         new[] { "left-shoulder", "LEFT SHOULDER", "quick slot LEFT: RG takes that gun out, or puts it away", "size" },
         new[] { "knife", "KNIFE  (chest)", "the knife (Andyalpa's holster; its size is the mod's own)", "" },
         new[] { "medicine", "MEDICINE", "a healing item (Andyalpa's holster; its size is the mod's own)", "" },
-        new[] { "ammo", "AMMO POUCH", "spare rounds for a reload (Andyalpa's; its size is the mod's own)", "" },
+        new[] { "ammo", "AMMO POUCH", "spare rounds for a reload: LG there takes a magazine, shells or rounds", "size:240" },   // 2026-11-16 (Tefa: the pouch "doesn't have a size slider"); 240 = Andyalpa's ammo_left_trigger_dist
     };
 
     readonly Settings settings = new Settings();
@@ -61,7 +62,8 @@ class HolstersUi : Form {
         scroll = new SkinPanel { Dock = DockStyle.Fill, AutoScroll = true, Padding = new Padding(8) };
         Controls.Add(scroll);
         Ticks.NameSection = (c, n) => nudge.Section(c, n);
-        foreach (var s in SPOTS) boxes.Add(new SpotBox(this, s[0], s[1], s[2], s[3] == "size"));
+        foreach (var s in SPOTS) boxes.Add(new SpotBox(this, s[0], s[1], s[2], s[3].StartsWith("size"),
+                                                   s[3].StartsWith("size:") ? int.Parse(s[3].Substring(5)) : OWN_SIZE_MM));
         for (int i = boxes.Count - 1; i >= 0; i--) scroll.Controls.Add(boxes[i]);
         openKey = settings.Get("open", "");
         BuildTop();
@@ -262,11 +264,12 @@ class HolstersUi : Form {
         readonly HolstersUi ui;
         public readonly string Key, Title;
         readonly bool hasSize;
+        readonly int ownSizeMm;
         readonly Slider fwd, up, right, size;
         bool userSize;
 
-        public SpotBox(HolstersUi ui, string key, string title, string what, bool hasSize) {
-            this.ui = ui; Key = key; Title = title; this.hasSize = hasSize;
+        public SpotBox(HolstersUi ui, string key, string title, string what, bool hasSize, int ownSizeMm) {
+            this.ui = ui; Key = key; Title = title; this.hasSize = hasSize; this.ownSizeMm = ownSizeMm;
             Dock = DockStyle.Top; Height = hasSize ? 252 : 212; BackColor = Color.Transparent; Padding = new Padding(0, 6, 0, 6);
             var inner = new SkinPanel { Dock = DockStyle.Fill, Tint = Color.FromArgb(150, Panel2), Padding = new Padding(8, 4, 8, 4) };
             Controls.Add(inner);
@@ -290,7 +293,7 @@ class HolstersUi : Form {
             fwd.Set(mm("z")); up.Set(mm("y")); right.Set(mm("x"));
             double r = HolsterFile.Spot(all, Key, "r");
             userSize = !double.IsNaN(r);
-            size.Set(userSize ? r * 1000 : OWN_SIZE_MM);
+            size.Set(userSize ? r * 1000 : ownSizeMm);
         }
 
         public void Store(Dictionary<string, object> all) {

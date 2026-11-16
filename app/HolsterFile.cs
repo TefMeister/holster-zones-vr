@@ -3,7 +3,7 @@
 //   holster_zones.json        WRITTEN HERE: { "sitting": { "on": true, "fwd": 0.30 },
 //                                             "spots": { "<key>": { "x": right, "y": up, "z": forward, "r": size } } }
 //                             metres. x / y / z move a spot from the mod's own place, in the body's facing; r is how close the
-//                             right hand must come (the four Visceral spots only; Andyalpa's knife, medicine and ammo keep
+//                             right hand must come (the four Visceral spots, and since 2026-11-16 the ammo pouch: how close the LEFT hand must come; Andyalpa's knife and medicine keep
 //                             their own). "sitting" moves every spot forward together. The game re-reads it twice a second.
 //   holster_zones_open.json   WRITTEN HERE: { "key": "<the open row>", "t": <unix seconds> }, about once a second; the game
 //                             shows the sphere of the open row's spot (a file older than 3 s = the window is closed).
