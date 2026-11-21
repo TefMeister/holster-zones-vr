@@ -18,7 +18,13 @@ sliders step with the controller through Window View (X −1, Y −5, A +1, B +5
 
 ## Get it
 
-Build it yourself: `build.bat` (only the C# compiler that ships with Windows), then
+**Download:** [HolsterZones-v1.3.zip](https://github.com/TefMeister/holster-zones-vr/releases/download/v1.3/HolsterZones-v1.3.zip)
+(v1.3, 2026-11-18; check it against `SHA256SUMS.txt` on the [release page](https://github.com/TefMeister/holster-zones-vr/releases/tag/v1.3)).
+Unzip, right-click `install.ps1`, choose **Run with PowerShell**; no administrator rights needed. Tested: the built-in
+self-test, 13 checks, all pass (2026-11-18); the ammo pouch's size slider (new in v1.3) has not been used in a headset yet.
+Lanes can install it for you too.
+
+Or build it yourself: `build.bat` (only the C# compiler that ships with Windows), then
 `dist\HolsterZones.exe --selftest build\selftest` (no game needed), then `install.ps1` (right-click, **Run with PowerShell**).
 A **Holster Zones** icon appears on the desktop; no administrator rights are needed. The game half (the holster script that
 reads the window's file and draws the sphere) is part of Visceral RE8 itself; without it the window opens but has nothing to move.
