@@ -193,6 +193,31 @@ class HolstersUi : Form {
         }
     }
 
+    // 2026-11-23: the SITTING switch set from outside the window (a session with nobody at the mouse, as Hand Poser and Grip Zones
+    // take it): reframework/data/visceral_re8/holster_remote.json in the game folder: {"seq": 3, "sitting": false, "fwd": 0.30}; the answer is
+    // holster_remote_done.json {"seq": 3, "ok": true, "sitting": false, "fwd": 0.3}. A new seq each time; "fwd" (metres) is optional.
+    double remoteSeq = -1;
+    void RemotePoll(string dataDir) {
+        if (dataDir == null) return;
+        string f = System.IO.Path.Combine(dataDir, "holster_remote.json");
+        try {
+            if (!System.IO.File.Exists(f)) return;
+            var o = Json.Obj(Json.Parse(System.IO.File.ReadAllText(f)));
+            object v;
+            if (o == null || !o.TryGetValue("seq", out v)) return;
+            double seq = Convert.ToDouble(v);
+            if (seq == remoteSeq) return;
+            remoteSeq = seq;
+            bool any = false;
+            if (o.TryGetValue("sitting", out v) && v is bool) { sitOn.Checked = (bool)v; any = true; }
+            if (o.TryGetValue("fwd", out v)) { sitFwd.Set(Convert.ToDouble(v) * 1000); any = true; }
+            if (any) { sitTouched = true; Changed(); }
+            System.IO.File.WriteAllText(System.IO.Path.Combine(dataDir, "holster_remote_done.json"),
+                "{\"seq\": " + seq.ToString(System.Globalization.CultureInfo.InvariantCulture) + ", \"ok\": " + (any ? "true" : "false") +
+                ", \"sitting\": " + (sitOn.Checked ? "true" : "false") + ", \"fwd\": " + (sitFwd.Value / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture) + "}");
+        } catch (Exception) { }   // half-written: the next poll reads it
+    }
+
     void Poll() {
         if (file.Folder == null) {
             if ((DateTime.Now - lastFind).TotalMilliseconds > FIND_GAME_EVERY_MS) {
@@ -216,6 +241,7 @@ class HolstersUi : Form {
         DateTime w = DateTime.MinValue;
         try { if (File.Exists(file.ZonesPath)) w = File.GetLastWriteTime(file.ZonesPath); } catch (IOException) { }
         if (!saveTimer.Enabled && w != lastZonesWrite) RefreshFromFile();
+        RemotePoll(file.DataDir);
         foreach (var b in boxes) b.ShowLive(live);
         ShowRows();
         WriteOpen(false);

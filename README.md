@@ -42,3 +42,7 @@ Visceral RE8's own. The window parts (sliders, skin, controller buttons) are sha
 should be credited here and are not, please open an issue.
 
 MIT licence.
+
+## The SITTING switch from outside the window (2026-11-23)
+
+A session with nobody at the mouse writes `reframework/data/visceral_re8/holster_remote.json` in the game folder: `{"seq": 3, "sitting": false, "fwd": 0.30}` (a new `seq` each time; `fwd` in metres is optional). The window sets its switch as if it had been clicked and answers in `holster_remote_done.json`. `[verified-live 2026-11-23, n=1: switched off, the game file followed]`
