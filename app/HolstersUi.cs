@@ -15,9 +15,8 @@ class HolstersUi : Form {
     const int OFFSET_MM = 400, SIZE_MIN_MM = 50, SIZE_MAX_MM = 400, SIT_MAX_MM = 700, NUDGE_MM = 5;
     const int OWN_SIZE_MM = 200;   // the Visceral spots' own size (visceral_re8_holsters.lua ENTER_M)
     const double OPEN_EVERY_S = 1.0;
-    static readonly Color Back = Color.FromArgb(28, 30, 38), Panel2 = Color.FromArgb(40, 43, 55), Ink = Color.FromArgb(235, 235, 240);
-    static readonly Color Dim = Color.FromArgb(155, 160, 175), Good = Color.FromArgb(90, 200, 120), Bad = Color.FromArgb(225, 120, 95);
-    static readonly Color Warn = Color.FromArgb(230, 190, 90), ButtonBack = Color.FromArgb(62, 67, 86);
+    static readonly Color Back = Look.Back, Panel2 = Look.Panel2, Ink = Look.Ink;   // 2026-11-25: the kit's colours (Skin.cs Look)
+    static readonly Color Dim = Look.Dim, Good = Look.Good, Bad = Look.Bad, Warn = Look.Warn, ButtonBack = Look.ButtonBack;
 
     // the spots, top to bottom: key (the game's name), title, what the hand does there, and whether its size can be set here
     // ("size", or "size:<mm>" when the spot's own size is not OWN_SIZE_MM)
@@ -118,6 +117,8 @@ class HolstersUi : Form {
         AddUndoButtons(three);
         nudgeNote = new SkinLabel { AutoSize = true, ForeColor = Dim, Padding = new Padding(4, 8, 0, 0) };
         three.Controls.Add(nudgeNote);
+        // 2026-11-25 (Tefa: "place things into sections"): every row a section with its tick (NudgeNav.cs SectionTick)
+        nudge.SectionTick(one, "top:game"); nudge.SectionTick(two, "top:sitting"); nudge.SectionTick(three, "top:ticks");
         top.Controls.Add(three);
         top.Controls.Add(sitRow);
         top.Controls.Add(two);
@@ -174,8 +175,7 @@ class HolstersUi : Form {
         // 2026-11-24 (Hand Poser's scheme, NudgeNav.cs / SliderUndo.cs): LT a section, the left stick a slider, the right stick tunes
         int n = Ticks.Count;
         string t = n > 0 ? n + " ticked · " : "";
-        nudgeNote.Text = !nudge.Linked ? t + "start Window View, click the left stick in: LT section, LS slider, RS tune, A tick, X undo"
-            : t + "LT section · LS slider · RS tune · A tick · B untick · X undo · Y redo";
+        nudgeNote.Text = (!nudge.Linked ? t + Nudge.HELP_OFF : t) + Nudge.HELP;   // 2026-11-25: the kit's words
         nudgeNote.ForeColor = nudge.Linked ? Good : Dim;
     }
     void NudgeTick() {
