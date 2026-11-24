@@ -13,8 +13,8 @@ mod's own place.
 **SITTING** moves every holster forward together, by the distance on its slider (30 cm to start with), so they can be reached
 from a chair. While the window is closed and SITTING is on, the game marks the spot nearest either hand with a small sphere.
 
-Made 2026-11-14 for playing seated: Window View hangs this window in VR, the same way as Hand Poser and Grip Zones. Ticked
-sliders step with the controller through Window View (X −1, Y −5, A +1, B +5); the − and + buttons step half a centimetre.
+Made 2026-11-14 for playing seated: Window View hangs this window in VR, the same way as Hand Poser and Grip Zones. The − and + buttons step half a centimetre.
+The controller, through Window View (the same as Hand Poser since 2026-11-24): **LT** on a part ticks its section box (the left stick then walks the sliders of every ticked section), **left stick** picks a slider (a yellow frame), **right stick** tunes it, or every ticked slider in the ticked sections (left / right −1 / +1, up / down −5 / +5, held repeats), **A** ticks the picked slider, **B** unticks the section's sliders, **X** undo / **Y** redo on the last slider used only (the window's one ↶ ↷ pair does the same), and while a grip holds a window nothing here moves. Not worn yet.
 
 ## Get it
 

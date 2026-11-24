@@ -14,7 +14,7 @@ using System.Linq;
 using System.Windows.Forms;
 
 static class Program {
-    public static readonly string AppData =
+    public static string AppData =   // 2026-11-24: --data <folder> points it elsewhere (the tests, never the real settings)
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HolsterZonesVR");
 
     [STAThread]
@@ -22,6 +22,7 @@ static class Program {
         string gameArg = null;
         for (int i = 0; i < args.Length; i++) {
             if (args[i] == "--game" && i + 1 < args.Length) gameArg = args[++i];
+            else if (args[i] == "--data" && i + 1 < args.Length) AppData = args[++i];
             else if (args[i] == "--selftest" && i + 1 < args.Length) return SelfTest(args[++i]) ? 0 : 1;
         }
         Application.EnableVisualStyles();

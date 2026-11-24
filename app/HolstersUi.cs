@@ -62,6 +62,8 @@ class HolstersUi : Form {
         scroll = new SkinPanel { Dock = DockStyle.Fill, AutoScroll = true, Padding = new Padding(8) };
         Controls.Add(scroll);
         Ticks.NameSection = (c, n) => nudge.Section(c, n);
+        nudge.Navigate = true;   // 2026-11-24: Hand Poser's scheme: LT section, LS slider, RS tune, A tick, B untick, X undo, Y redo (NudgeNav.cs)
+        nudge.UndoContext = () => openKey;   // the one undo forgets its steps when another holster is opened
         foreach (var s in SPOTS) boxes.Add(new SpotBox(this, s[0], s[1], s[2], s[3].StartsWith("size"),
                                                    s[3].StartsWith("size:") ? int.Parse(s[3].Substring(5)) : OWN_SIZE_MM));
         for (int i = boxes.Count - 1; i >= 0; i--) scroll.Controls.Add(boxes[i]);
@@ -110,8 +112,10 @@ class HolstersUi : Form {
         var sitRow = new SkinPanel { Dock = DockStyle.Top, Height = 46, Tint = Color.FromArgb(0, Back), Padding = new Padding(8, 2, 8, 2) };
         sitFwd = new Slider(() => { if (!syncing) { sitTouched = true; Changed(); } }, "sitting: forward", 0, SIT_MAX_MM, false);
         sitRow.Controls.Add(sitFwd);
+        if (Ticks.NameSection != null) Ticks.NameSection(sitRow, "sit");   // 2026-11-24: a part of its own, so the left stick can reach it
         var three = Row(42);
         three.Controls.Add(Btn("CLEAR ALL TICKS", (s, e) => Ticks.ClearAll()));
+        AddUndoButtons(three);
         nudgeNote = new SkinLabel { AutoSize = true, ForeColor = Dim, Padding = new Padding(4, 8, 0, 0) };
         three.Controls.Add(nudgeNote);
         top.Controls.Add(three);
@@ -167,16 +171,35 @@ class HolstersUi : Form {
     // ---- the controller nudge (Nudge.cs, the same buttons as Hand Poser and Grip Zones) ------------------------------------
     void ShowNudge() {
         if (nudgeNote == null) return;
+        // 2026-11-24 (Hand Poser's scheme, NudgeNav.cs / SliderUndo.cs): LT a section, the left stick a slider, the right stick tunes
         int n = Ticks.Count;
-        nudgeNote.Text = n == 0 ? "tick sliders: right stick: left / right -1 / +1, up / down +5 / -5; Y clears the ticks" : !nudge.Linked ? n + " ticked: start Window View, click the left stick in"
-            : n + " ticked: right stick -1 / +1 / +5 / -5 (held repeats), Y clears";
-        nudgeNote.ForeColor = n > 0 && nudge.Linked ? Good : Dim;
+        string t = n > 0 ? n + " ticked · " : "";
+        nudgeNote.Text = !nudge.Linked ? t + "start Window View, click the left stick in: LT section, LS slider, RS tune, A tick, X undo"
+            : t + "LT section · LS slider · RS tune · A tick · B untick · X undo · Y redo";
+        nudgeNote.ForeColor = nudge.Linked ? Good : Dim;
     }
     void NudgeTick() {
         bool started;
-        double step = nudge.Poll(Ticks.Count > 0, out started);
+        double step = nudge.Poll(Ticks.Count > 0 || nudge.PickedKey != null, out started);   // 2026-11-24: or the slider the left stick selected
+        ShowUndo();
         if (step == 0) return;
-        Ticks.StepAll((int)step, nudge.Allows);
+        var use = nudge.Filter(Ticks.TickedKeys());   // the ticked sliders of the ticked sections, else the selected one
+        if (started) nudge.BeginUndo(use);            // the last slider(s) used, for the one undo (X, ↶)
+        Ticks.StepKeys((int)step, use);
+    }
+    // 2026-11-24: the window's one undo / redo, on the last slider used (SliderUndo.cs); X / Y on the controller do the same
+    Button undoAll, redoAll;
+    void ShowUndo() {
+        if (undoAll == null) return;
+        bool u = nudge.CanUndo, r = nudge.CanRedo;
+        if (undoAll.Enabled != u) undoAll.Enabled = u;
+        if (redoAll.Enabled != r) redoAll.Enabled = r;
+    }
+    void AddUndoButtons(Control row) {
+        undoAll = Btn("↶", (s, e) => { nudge.UndoLast(false); ShowUndo(); }, 40);
+        redoAll = Btn("↷", (s, e) => { nudge.UndoLast(true); ShowUndo(); }, 40);
+        undoAll.Enabled = redoAll.Enabled = false;
+        row.Controls.Add(undoAll); row.Controls.Add(redoAll);
     }
 
     // ---- the game ---------------------------------------------------------------------------------------------------------
@@ -296,11 +319,11 @@ class HolstersUi : Form {
 
         public SpotBox(HolstersUi ui, string key, string title, string what, bool hasSize, int ownSizeMm) {
             this.ui = ui; Key = key; Title = title; this.hasSize = hasSize; this.ownSizeMm = ownSizeMm;
-            Dock = DockStyle.Top; Height = hasSize ? 252 : 212; BackColor = Color.Transparent; Padding = new Padding(0, 6, 0, 6);
+            Dock = DockStyle.Top; Height = hasSize ? 256 : 216; BackColor = Color.Transparent; Padding = new Padding(0, 6, 0, 6);
             var inner = new SkinPanel { Dock = DockStyle.Fill, Tint = Color.FromArgb(150, Panel2), Padding = new Padding(8, 4, 8, 4) };
             Controls.Add(inner);
-            if (Ticks.NameSection != null) Ticks.NameSection(inner, "holster:" + key);
-            var note = new SkinLabel { Dock = DockStyle.Top, Height = 26, ForeColor = Dim, Text = what };
+            var note = new SkinLabel { Dock = DockStyle.Top, Height = 30, ForeColor = Dim, Text = what, Padding = new Padding(0, 6, 0, 0) };
+            Ticks.Section(inner, note, "holster:" + key);   // 2026-11-24: its section tick at the left of the first line
             Action changed = () => ui.Changed();
             fwd = new Slider(changed, "back / forward", -OFFSET_MM, OFFSET_MM, true);
             up = new Slider(changed, "down / up", -OFFSET_MM, OFFSET_MM, true);
